@@ -7,12 +7,23 @@ const mongoose = require('mongoose')
 const logger = require('./app/lib/loggerLib')
 const routeLogger = require('./app/middlewares/routeLogger')
 const appErrorHandler = require('./app/middlewares/appErrorHandler')
-const fs = require('fs')
+const fs = require('fs');
+const bodyparser = require('body-parser')
 
 //middlewares
 app.use(helmet())
 app.use(routeLogger.logIp)
-app.use(appErrorHandler.globalErrorHandler)
+app.use(appErrorHandler.globalErrorHandler);
+app.use(bodyparser.json())
+app.use(bodyparser.urlencoded({extended:false}))
+
+//Bootstrap models
+let modelsPath = ('./app/model');
+
+fs.readdirSync(modelsPath).forEach(function (file) {
+  if (~file.indexOf('.js')) require(modelsPath + '/' + file)
+});
+// end Bootstrap models
 
 // Bootstrap route
 let routesPath = './app/routes';
