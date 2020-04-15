@@ -1,5 +1,5 @@
 const http = require('http');
-const appConfig = require('./appConfig')
+const appConfig = require('./appConfig');
 const express = require('express');
 const app = express();
 const helmet = require('helmet')
@@ -8,7 +8,7 @@ const logger = require('./app/lib/loggerLib')
 const routeLogger = require('./app/middlewares/routeLogger')
 const appErrorHandler = require('./app/middlewares/appErrorHandler')
 const fs = require('fs');
-const bodyparser = require('body-parser')
+const bodyparser = require('body-parser');
 
 //middlewares
 app.use(helmet())
