@@ -7,6 +7,7 @@ let setRouter = (app) => {
     app.post(`${baseUrl}/signup`, userController.signUp)
     app.post(`${baseUrl}/signin`, userController.signIn);
     app.post(`${baseUrl}/signout`, authMiddleware.isAuthorized, userController.signOut);
+    app.get(`${baseUrl}/view/all`,authMiddleware.isAuthorized,userController.getAllUsers)
 }
 
 module.exports =

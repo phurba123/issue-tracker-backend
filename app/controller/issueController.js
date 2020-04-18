@@ -3,7 +3,8 @@ const response = require('../lib/responseLib')
 const mongoose = require('mongoose')
 const issueModel = mongoose.model('IssueModel');
 const shortId = require('shortid');
-const timeLib = require('../lib/timeLib')
+const timeLib = require('../lib/timeLib');
+const checkLib = require('../lib/checkLib')
 
 let apiResponse = "";
 
@@ -78,17 +79,112 @@ let createIssue = (req, res) => {
     }//end of createNewIssue promise
 
     validateInputs(req, res)
-    .then(createNewIssue)
-    .then((resolve)=>
-    {
-        res.send(resolve)
-    })
-    .catch((error)=>
-    {
-        res.send(error)
-    })
+        .then(createNewIssue)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
 };
 
+//getting all issues
+let getAllIssues = (req, res) => {
+    issueModel.find()
+        .select(' -__v -_id -comments')
+        .lean()
+        .exec((err, result) => {
+            if (err) {
+                console.log(err)
+                logger.error('failed to find all issues', 'issue Controller: getAllIssues', 10)
+                let apiResponse = response.generate(true, 'Failed To Find all issues', 500, null)
+                res.send(apiResponse)
+            } else if (checkLib.isEmpty(result)) {
+                logger.info('No issues Found', 'issue Controller: getAllIssues')
+                let apiResponse = response.generate(true, 'No issues Found', 404, null)
+                res.send(apiResponse)
+            } else {
+                let apiResponse = response.generate(false, 'All issues Details Found', 200, result)
+                res.send(apiResponse)
+            }
+        })
+}//end of getting all issues
+
+/* Get single issue details */
+let getIssueById = (req, res) => {
+    issueModel.findOne({ 'issueId': req.params.issueId })
+        .select('-__v -_id')
+        .lean()
+        .exec((err, result) => {
+            if (err) {
+                console.log(err)
+                logger.error('failed to find single issue detail', 'issue Controller: getIssueById', 10)
+                let apiResponse = response.generate(true, 'Failed To Find issue Detail', 500, null)
+                res.send(apiResponse)
+            } else if (checkLib.isEmpty(result)) {
+                logger.info('No issue Found', 'issue Controller:getIssueById')
+                let apiResponse = response.generate(true, 'No issue Found', 404, null)
+                res.send(apiResponse)
+            } else {
+                let apiResponse = response.generate(false, 'issue Details Found', 200, result)
+                res.send(apiResponse)
+            }
+        })
+}// end get single user
+
+let getIssuesOfUser = (req, res) => {
+    let validateInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.params.userId) {
+                resolve(req)
+            }
+            else {
+                logger.error('No userId provided');
+                apiResponse = response.generate(true, 'userId not provided', 500, null);
+                reject(apiResponse)
+            }
+        })
+    }//end of validate input promise
+
+    //finding all issues of user from issue model
+
+    let getIssues = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.find({ "assignee.assigneeId": req.params.userId })
+                .select('-id -__v -comments -watchers')
+                .exec((err, result) => {
+                    if (err) {
+                        logger.error(err, 'IssueController:getIssues', 10);
+                        apiResponse = response.generate(true, 'failed to get issues', 500, null);
+                        reject(apiResponse)
+                    }
+                    else if (checkLib.isEmpty(result)) {
+                        logger.info('no any issues found with given userId');
+                        apiResponse = response.generate(true, 'no any issues found for given userId');
+                        reject(apiResponse)
+                    }
+                    else {
+                        logger.info('issues found for userId provided');
+                        apiResponse = response.generate(false, 'issues found for userId', 200, result);
+                        resolve(apiResponse)
+                    }
+                })
+        })
+    }
+
+    validateInput(req, res)
+        .then(getIssues)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+}
+
 module.exports = {
-    createIssue: createIssue
+    createIssue: createIssue,
+    getAllIssues: getAllIssues,
+    getIssueById: getIssueById,
+    getIssuesOfUser:getIssuesOfUser
 }
