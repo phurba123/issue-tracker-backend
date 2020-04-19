@@ -21,6 +21,13 @@ let setRouter = (app)=>
     //getting issues assigned to a user
     //required--params--userId
     app.get(`${baseUrl}/:userId/view/all`,authMiddleware.isAuthorized,issueController.getIssuesOfUser);
+
+    //getting reported issues of user
+    //required --params--userId
+    app.get(`${baseUrl}/:userId/reported/issues`,authMiddleware.isAuthorized,issueController.reportedIssuesOfUser);
+
+    //adding new comment
+    app.post(`${baseUrl}/comment/create`,authMiddleware.isAuthorized, issueController.addComment)
 }
 
 module.exports={

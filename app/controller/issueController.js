@@ -182,9 +182,142 @@ let getIssuesOfUser = (req, res) => {
         })
 }
 
+let reportedIssuesOfUser = (req, res) => {
+    let validateInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.params.userId) {
+                resolve(req)
+            }
+            else {
+                logger.error('UserId not provided');
+                apiResponse = response.generate(true, 'UserId not provided', 500, null);
+                reject(apiResponse)
+            }
+        })
+    }
+
+    //getting reported issues from db
+    let getReportedIssues = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.find({ "reporter.reporterId": req.params.userId })
+                .select('-id -__v')
+                .exec((err, result) => {
+                    if (err) {
+                        logger.error(err, 'IssueController:getReportedIssues', 10);
+                        apiResponse = response.generate(true, 'error while getting reported issues from server', 500, null);
+                        reject(apiResponse);
+                    }
+                    else if (checkLib.isEmpty(result)) {
+                        logger.info('no reported issues found')
+                        apiResponse = response.generate(true, 'no reported issues found', 404, null);
+                        reject(apiResponse)
+                    }
+                    else {
+                        logger.info('reported issues found for user');
+                        apiResponse = response.generate(false, 'reported issues found', 200, result);
+                        resolve(apiResponse);
+                    }
+                })
+        })
+    }//end of getReportedIssues promise
+
+    validateInput(req, res)
+        .then(getReportedIssues)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+}
+
+//adding comment to issue
+let addComment = (req, res) => {
+    let validateInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.body.userId, req.body.firstName, req.body.comment, req.body.issueId) {
+                resolve(req)
+            }
+            else {
+                logger.error('one or more parameter missing', 'Issuecontroller:addComment');
+                apiResponse = response.generate(true, 'one or more parameter is missing', 500, null);
+                reject(apiResponse)
+            }
+        })
+    }//end of validateinput
+
+    let confirmIssueId = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.findOne({ 'issueId': req.body.issueId })
+                .exec((err, result) => {
+                    if (err) {
+                        logger.error('error while finding issue', 'issuecontroller:addcomment', 10);
+                        apiResponse = response.generate(true, 'error while finding issue to add comment', 500, null);
+                        reject(apiResponse)
+                    }
+                    else if (checkLib.isEmpty(result)) {
+                        logger.error('no issue found for adding comment');
+                        apiResponse = response.generate(true, 'no issue found for adding comment', 404, null);
+                        reject(apiResponse)
+                    }
+                    else {
+                        resolve(req)
+                    }
+                })
+        })
+
+    }
+
+    let addingComment = () => {
+        return new Promise((resolve, reject) => {
+            //comment object
+            let comment =
+            {
+                commenterId: req.body.userId,
+                commenterName: req.body.firstName,
+                comment: req.body.comment
+            }
+
+            //using array method to push comment onto issue
+            let option = {
+                $push: {
+                    comments: {
+                        $each: [comment]
+                    }
+                }
+            }
+
+            issueModel.updateOne({ 'issueId': req.body.issueId }, option).exec((err, result) => {
+                if (err) {
+                    logger.error(err, 'issuecontroller:addingcomment', 10);
+                    apiResponse = response.generate(true, 'error while adding comment from server', 500, null);
+                    reject(apiResponse)
+                }
+                else {
+                    logger.info('comment added');
+                    apiResponse = response.generate(false, 'comment added', 200, comment);
+                    resolve(apiResponse)
+                }
+            })
+        })
+    }//end of adding comment
+
+    validateInput(req, res)
+        .then(confirmIssueId)
+        .then(addingComment)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+}
+
 module.exports = {
     createIssue: createIssue,
     getAllIssues: getAllIssues,
     getIssueById: getIssueById,
-    getIssuesOfUser:getIssuesOfUser
+    getIssuesOfUser: getIssuesOfUser,
+    reportedIssuesOfUser: reportedIssuesOfUser,
+    addComment: addComment
 }
