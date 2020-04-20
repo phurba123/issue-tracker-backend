@@ -93,6 +93,8 @@ let getAllIssues = (req, res) => {
     issueModel.find()
         .select(' -__v -_id -comments')
         .lean()
+        .skip(parseInt(req.query.skip))
+        .limit(7)
         .exec((err, result) => {
             if (err) {
                 console.log(err)
@@ -200,7 +202,9 @@ let reportedIssuesOfUser = (req, res) => {
     let getReportedIssues = () => {
         return new Promise((resolve, reject) => {
             issueModel.find({ "reporter.reporterId": req.params.userId })
-                .select('-id -__v')
+                .select('-id -__v -comments')
+                .skip(parseInt(req.query.skip))
+                .limit(8)
                 .exec((err, result) => {
                     if (err) {
                         logger.error(err, 'IssueController:getReportedIssues', 10);
