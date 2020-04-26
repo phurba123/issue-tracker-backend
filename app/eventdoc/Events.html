@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+    <title>Events</title>
+    <!-- CSS  -->
+    <link href="./Events_files/icon" rel="stylesheet">
+    <link rel="stylesheet" href="./Events_files/materialize.min.css">
+    <style>
+        /* Custom Stylesheet */
+
+        .icon-block {
+            padding: 0 15px;
+        }
+
+        .icon-block .material-icons {
+            font-size: inherit;
+        }
+        </style>
+</head>
+
+<body cz-shortcut-listen="true">
+    <nav class="black lighten-1" role="navigation">
+        <div class="nav-wrapper container"><a id="logo-container"
+                class="brand-logo" style="font-size:1.6em !important; color: white;"><strong>
+                    Issue-Tracker
+            <ul class="right hide-on-med-and-down">
+                <li><a href="http://api.issue-tracker.phursang.xyz/">API Docs</a></li>
+            </ul>
+            <ul id="nav-mobile" class="side-nav" style="transform: translateX(-100%);">
+                <li><a href="http://api.issue-tracker.phursang.xyz/">API Docs</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div class="section no-pad-bot" style="margin-bottom: 0px" id="index-banner">
+        <div class="container" style="width: 80%">
+            <p style="font-size: 2em; font-weight: 540; text-align: center">Events documentation</p>
+            <div class="row">
+
+                <div class="col hide-on-small-only m3 l2">
+                    <ul class="section table-of-contents" style="position: fixed;overflow-y: scroll;height: 50vh;">
+
+                        <li><a href="#listen" style="color: #03a9f4; font-size: 1.2em; font-weight: bold">Listen</a></li>
+                        <li><a href="#userId">userId</a></li>
+                        <li><a href="#authError">auth-error-(userId)</a></li>
+                        <li><a href="#emit" style="color: #03a9f4; font-size: 1.2em; font-weight: bold">Emit</a></li>
+                        <li><a href="#verifyUser">verifyUser</a></li>
+                        <li><a href="#notify-updates">notify-updates</a></li>
+
+                    </ul>
+                </div>
+
+                <div class="col s12 m9 l10">
+
+                    <div id="listen" class="section scrollspy"></div>
+                    <h4>Events to listen</h4>
+
+                    <div id="userId" class="section scrollspy">
+                        <h5>userId event</h5>
+                        This event <span style="font-weight: 600">("userId")</span> has to be listened to get the
+                        updates from another user.<br>
+                        Example output is as follows:<br>
+                        <pre>                                {
+                                    issueId:'jfid8fs9',
+                                    message: 'xyz has added comment on issue',
+                                }
+                        </pre>
+                    </div>
+
+                    <div id="authError" class="section scrollspy">
+                        <h5>Auth Error (optional)</h5>
+                        This event <span style="font-weight: 600">("auth-error-(your userId)")</span> has to be listened to verify auth token.<br>
+                    </div>
+
+                    <div id="emit" class="section scrollspy"></div>
+                    <h4>Events to emit</h4>
+
+                    <div id="verifyUser" class="section scrollspy">
+                        <h5>verifyUser event</h5>
+                        This event <span style="font-weight: 600">("verifyUser")</span> has to be emitted on the
+                        user's end to verify user authentication.<br>
+                        The following data has to be emitted<br>
+                        <pre>                           {
+                                authToken:'jfskj983u9fj00f093jfsdi',
+                                userId:'jifsd89f'
+                                
+                            }
+                        </pre>
+                    </div>
+
+                    
+
+                    <div id="notify-updates" class="section scrollspy">
+                        <h5>notify-updates event</h5>
+                        This event <span style="font-weight: 600">("notify-updates")</span> has to be emitted to share
+                        the update message to assignees,<br>watchers and reporter of issue<br>
+                        <pre>                           {
+                                issueId:"kffs9f9",
+                                assignee:[
+                                    {
+                                        assigneeId:'ki8sf9',
+                                        assigneeName:'roshan'
+                                    }
+                                ],
+                                reporter:{
+                                    reporterId:'fkj9fs9',
+                                    reporterName:'rahul'
+                                },
+                                watchers:[],
+                                userId:'kjf9s9',
+                                message:'rahul has edited an issue'
+                                
+                            }
+                        </pre>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <br><br><br><br>
+    <!--  Scripts-->
+    <script src="./Events_files/jquery-2.1.1.min.js.download"></script>
+    <script src="./Events_files/materialize.min.js.download"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.scrollspy').scrollSpy();
+        });
+    </script>
+    <script>
+        (function ($) {
+            $(function () {
+
+                $('.button-collapse').sideNav();
+
+            });
+        })(jQuery); 
+    </script>
+
+
+
+    <div class="hiddendiv common"> </div>
+    <div class="drag-target" data-sidenav="nav-mobile" style="left: 0px; touch-action: pan-y; -webkit-user-drag: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);">
+    </div>
+</body>
+
+</html>

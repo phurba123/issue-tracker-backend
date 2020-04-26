@@ -23,7 +23,7 @@ let setServer = (server) => {
             })
         })
 
-        //listening to added comment ,data should include info about issueId,assignee,reporter,watchers,userId,message
+        //listening to updates ,data should include info about issueId,assignee,reporter,watchers,userId,message
         
         socket.on('notify-updates', (data) => {
             //console.log('socket : ',data)
