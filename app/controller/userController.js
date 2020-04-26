@@ -99,7 +99,7 @@ let signUp = (req, res) => {
     validateUserInput(req, res)
         .then(createUser)
         .then((resolve) => {
-            console.log('inside resolve')
+            //console.log('inside resolve')
             delete resolve.password;
             delete resolve.__v;
             delete resolve._id;
@@ -107,7 +107,7 @@ let signUp = (req, res) => {
             res.send(apiResponse);
         })
         .catch((error) => {
-            console.log('inside catch')
+            //console.log('inside catch')
             res.send(error)
         })
 }
@@ -116,7 +116,7 @@ let signIn = (req, res) => {
     //using promise for finding user
     let findUser = () => {
         //function for finding a user
-        console.log('find user');
+        //console.log('find user');
         return new Promise((resolve, reject) => {
             if (req.body.email) {
                 UserModel.findOne({ email: req.body.email }, (err, userDetails) => {
@@ -149,7 +149,7 @@ let signIn = (req, res) => {
 
     let validatePassword = (retrievedUserDetails) => {
         //validating password provided
-        console.log('validate password');
+        //console.log('validate password');
         return new Promise((resolve, reject) => {
             passwordLib.comparePassword(req.body.password, retrievedUserDetails.password, (err, isMatch) => {
                 if (err) {
@@ -177,7 +177,7 @@ let signIn = (req, res) => {
 
     let generateToken = (userDetails) => {
         //generating token on validation
-        console.log('generate token');
+        //console.log('generate token');
         return new Promise((resolve, reject) => {
             tokenLib.generateToken(userDetails, (error, tokenDetails) => {
                 if (error) {
@@ -194,7 +194,7 @@ let signIn = (req, res) => {
     }//end of generating token
 
     let saveToken = (tokenDetails) => {
-        console.log('save token');
+        //console.log('save token');
 
         return new Promise((resolve, reject) => {
             authModel.findOne({ 'userId': tokenDetails.userDetails.userId }, (err, retrievedTokenDetails) => {
@@ -244,7 +244,7 @@ let signIn = (req, res) => {
                         }
                         else {
                             //console.log('new token details after log in'+newTokenDetails.authToken)
-                            console.log('newtokendetails : ' + newTokenDetails)
+                            //console.log('newtokendetails : ' + newTokenDetails)
                             let response = {
                                 authToken: newTokenDetails.authToken,
                                 userDetails: tokenDetails.userDetails
@@ -278,7 +278,7 @@ let signOut = (req, res) => {
 
     authModel.findOneAndRemove({ userId: req.user.userId }, (err, result) => {
         if (err) {
-            console.log(err)
+            //console.log(err)
             logger.error(err.message, 'user Controller: logout', 10)
             let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
             res.send(apiResponse)
@@ -300,7 +300,7 @@ let getAllUsers = (req, res) => {
         .lean()
         .exec((err, result) => {
             if (err) {
-                console.log(err)
+                //console.log(err)
                 logger.error('failed to find all user', 'User Controller: getAllUser', 10)
                 let apiResponse = response.generate(true, 'Failed To Find User Details', 500, null)
                 res.send(apiResponse)
@@ -348,7 +348,7 @@ let forgotPassword = (req, res) => {
                 .lean()
                 .exec((err, result) => {
                     if (err) {
-                        console.log(err)
+                        //console.log(err)
                         logger.error('failed to find user detail', 'User Controller: recoverPassword', 10)
                         apiResponse = response.generate(true, 'Failed To Find User Details', 500, null)
                         reject(apiResponse)
@@ -368,7 +368,7 @@ let forgotPassword = (req, res) => {
 
         //generating new password
         let newPassword = passwordLib.generateNewPassword();
-        console.log('new password', newPassword);
+        //console.log('new password', newPassword);
 
         //updating userDetail with new hashed password
         userDetail.password = passwordLib.hashPassword(newPassword)
@@ -376,7 +376,7 @@ let forgotPassword = (req, res) => {
         return new Promise((resolve, reject) => {
             UserModel.updateOne({ 'email': req.params.email }, userDetail).exec((err, result) => {
                 if (err) {
-                    console.log(err)
+                    //console.log(err)
                     logger.error('failed to reset password', 'User Controller:generateAndSavePassword', 10)
                     apiResponse = response.generate(true, 'Failed To reset Password', 500, null)
                     reject(apiResponse)

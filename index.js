@@ -47,7 +47,7 @@ server.on('error', onError);
  */
 
 function onListening() {
-    console.log('inside onListening')
+    //console.log('inside onListening')
 
     var addr = server.address();
     var bind = typeof addr === 'string'

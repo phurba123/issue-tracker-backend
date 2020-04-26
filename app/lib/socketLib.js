@@ -5,10 +5,10 @@ let setServer = (server) => {
     let io = socketio.listen(server);
     let myIo = io.of('/');
 
-    console.log('inside setserver on socket')
+    //console.log('inside setserver on socket')
 
     myIo.on("connection", (socket) => {
-        console.log('inside connection')
+        //console.log('inside connection')
         //listening to verify-user event for verifying authtoken
         socket.on("verify-user", (data) => {
             tokenLib.verifyClaimWithoutSecret(data.authToken, (err, result) => {
@@ -32,7 +32,7 @@ let setServer = (server) => {
 
             //if userId of commenting user is not the one who has reported the issue then only include it in usersId
             if (data.userId != data.reporter.reporterId) {
-                console.log('not equal')
+                //console.log('not equal')
                 usersId.push(data.reporter.reporterId)
             }
 

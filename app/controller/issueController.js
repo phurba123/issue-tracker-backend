@@ -97,7 +97,7 @@ let getAllIssues = (req, res) => {
         .limit(6)
         .exec((err, result) => {
             if (err) {
-                console.log(err)
+                //console.log(err)
                 logger.error('failed to find all issues', 'issue Controller: getAllIssues', 10)
                 let apiResponse = response.generate(true, 'Failed To Find all issues', 500, null)
                 res.send(apiResponse)
@@ -119,7 +119,7 @@ let getIssueById = (req, res) => {
         .lean()
         .exec((err, result) => {
             if (err) {
-                console.log(err)
+                //console.log(err)
                 logger.error('failed to find single issue detail', 'issue Controller: getIssueById', 10)
                 let apiResponse = response.generate(true, 'Failed To Find issue Detail', 500, null)
                 res.send(apiResponse)
@@ -359,7 +359,7 @@ let editIssue = (req, res) => {
     }//end of validate issue
 
     let editIssueAfterValidation = (issueDetail) => {
-        console.log('issueDetail : ', issueDetail[0]);
+        //console.log('issueDetail : ', issueDetail[0]);
         return new Promise((resolve, reject) => {
             // let previousAssignees =[];
             // previousAssignees= previousAssignees.concat(issueDetail.assignee)
@@ -373,7 +373,7 @@ let editIssue = (req, res) => {
                 assignee: issueDetail[0].assignee || []
             }
 
-            console.log('data : ', data)
+            //console.log('data : ', data)
 
             //if assigneeId and assigneeName is provided than include it ,else dont
             if (req.body.assigneeId && req.body.assigneeName) {
@@ -515,7 +515,7 @@ let searchIssue = (req, res) => {
                 .lean()
                 .exec((err, result) => {
                     if (err) {
-                        console.log(err)
+                        //console.log(err)
                         logger.error('failed to find all issues', 'issue Controller: findAllIssues', 10)
                         let apiResponse = response.generate(true, 'Failed To Find all issues', 500, null)
                         res.send(apiResponse)
@@ -538,7 +538,7 @@ let searchIssue = (req, res) => {
             if (allIssues) {
                 allIssues.forEach((issue) => {
                     let n = issue.title.search(new RegExp(searchText, 'i'));
-                    console.log(n);
+                    //console.log(n);
                     if (n >= 0) {
                         result.push(issue);
                     }

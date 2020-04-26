@@ -1,7 +1,7 @@
 let appConfig ={};
     appConfig.env= 'dev',
     appConfig.apiVersion= '/api/v1',
-    appConfig.port= 3200,
+    appConfig.port= 3000,
     appConfig.allowedCorsOrigin= '*',
     appConfig.db=
     {

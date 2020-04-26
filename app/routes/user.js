@@ -25,7 +25,7 @@ let setRouter = (app) => {
         "error": false,
         "message": "User Created",
         "status": 200,
-        "data": 
+        "data": [
             {
                 "createdOn": "2020-03-12T16:42:58.000Z",
                 "email": "gomail@gmail.com",
