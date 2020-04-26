@@ -18,9 +18,11 @@
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.28",
     "mongoose": "^5.9.7",
+    "nodemailer": "^6.4.6",
     "passport": "^0.4.1",
     "passport-facebook": "^3.0.0",
     "pino": "^6.2.0",
-    "shortid": "^2.2.15"
+    "shortid": "^2.2.15",
+    "socket.io": "^2.3.0"
   }
 }

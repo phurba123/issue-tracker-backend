@@ -94,7 +94,7 @@ let getAllIssues = (req, res) => {
         .select(' -__v -_id -comments')
         .lean()
         .skip(parseInt(req.query.skip))
-        .limit(7)
+        .limit(6)
         .exec((err, result) => {
             if (err) {
                 console.log(err)
@@ -137,7 +137,7 @@ let getIssueById = (req, res) => {
 let getIssuesOfUser = (req, res) => {
     let validateInput = () => {
         return new Promise((resolve, reject) => {
-            if (req.params.userId) {
+            if (req.params.userId, req.query.skip) {
                 resolve(req)
             }
             else {
@@ -154,6 +154,8 @@ let getIssuesOfUser = (req, res) => {
         return new Promise((resolve, reject) => {
             issueModel.find({ "assignee.assigneeId": req.params.userId })
                 .select('-id -__v -comments -watchers')
+                .skip(parseInt(req.query.skip))
+                .limit(6)
                 .exec((err, result) => {
                     if (err) {
                         logger.error(err, 'IssueController:getIssues', 10);
@@ -204,7 +206,7 @@ let reportedIssuesOfUser = (req, res) => {
             issueModel.find({ "reporter.reporterId": req.params.userId })
                 .select('-id -__v -comments')
                 .skip(parseInt(req.query.skip))
-                .limit(8)
+                .limit(6)
                 .exec((err, result) => {
                     if (err) {
                         logger.error(err, 'IssueController:getReportedIssues', 10);
@@ -317,11 +319,256 @@ let addComment = (req, res) => {
         })
 }
 
+//editing issue
+let editIssue = (req, res) => {
+    //title,description,status,reporterId,reporterName
+    let validateInputs = () => {
+        return new Promise((resolve, reject) => {
+            if (req.body.title && req.body.description && req.body.status && req.params.issueId) {
+                resolve(req)
+            }
+            else {
+                logger.error('one or more parameter is missing', 'issuecontroller:editIssue', 10);
+                apiResponse = response.generate(true, 'one or more parameter is missin', 500, null)
+                reject(apiResponse)
+            }
+        })
+    }//end of validateInputs
+
+    let validateIssue = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.find({ 'issueId': req.params.issueId })
+                .select('-_id -__v -comments')
+                .exec((err, result) => {
+                    if (err) {
+                        logger.error('error while finding issue', 'IssueController:validateIssue', 10);
+                        apiResponse = response.generate(true, 'error on validating issue from server', 500, null);
+                        reject(apiResponse)
+                    }
+                    else if (checkLib.isEmpty(result)) {
+                        logger.info('issue not found');
+                        apiResponse = response.generate(true, 'issue not found', 404, null);
+                        reject(apiResponse)
+                    }
+                    else {
+                        resolve(result)
+                        //console.log('resolve result : ',result)
+                    }
+                })
+        })
+    }//end of validate issue
+
+    let editIssueAfterValidation = (issueDetail) => {
+        console.log('issueDetail : ', issueDetail[0]);
+        return new Promise((resolve, reject) => {
+            // let previousAssignees =[];
+            // previousAssignees= previousAssignees.concat(issueDetail.assignee)
+            // console.log('previousAssignees : ',previousAssignees);
+
+            let data =
+            {
+                title: req.body.title,
+                description: req.body.description,
+                status: req.body.status,
+                assignee: issueDetail[0].assignee || []
+            }
+
+            console.log('data : ', data)
+
+            //if assigneeId and assigneeName is provided than include it ,else dont
+            if (req.body.assigneeId && req.body.assigneeName) {
+                data.assignee.push({ assigneeId: req.body.assigneeId, assigneeName: req.body.assigneeName });
+            }
+
+            //console.log('data after push : ',data)
+
+            issueModel.updateOne({ 'issueId': req.params.issueId }, data, (err, result) => {
+                if (err) {
+                    logger.error('error while updating issue');
+                    apiResponse = response.generate(true, 'error while updating issue', 500, null);
+                    reject(apiResponse)
+                }
+                else {
+                    logger.info('issue updated ');
+                    apiResponse = response.generate(false, 'issue updated', 200, null);
+                    resolve(apiResponse)
+                }
+            })
+        })
+
+    }//end of edit issueafter validation
+
+    validateInputs(req, res)
+        .then(validateIssue)
+        .then(editIssueAfterValidation)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+
+}
+
+//controller to add user as watcher
+let addWatcher = (req, res) => {
+    let validateInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.params.issueId && req.body.watcherName && req.body.watcherId) {
+                resolve(req)
+            }
+            else {
+                logger.error('one or more parameter is missing');
+                apiResponse = response.generate(true, 'one or more parameter is missin', 500, null);
+                reject(apiResponse)
+            }
+        })
+    }//end of validateInput
+
+    let validateIssue = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.find({ 'issueId': req.params.issueId })
+                .select('-_id -__v -comments')
+                .exec((err, result) => {
+                    if (err) {
+                        logger.error('error while finding issue', 'IssueController:validateIssue', 10);
+                        apiResponse = response.generate(true, 'error on validating issue from server', 500, null);
+                        reject(apiResponse)
+                    }
+                    else if (checkLib.isEmpty(result)) {
+                        logger.info('issue not found');
+                        apiResponse = response.generate(true, 'issue not found', 404, null);
+                        reject(apiResponse)
+                    }
+                    else {
+                        resolve(result)
+                        //console.log('resolve result : ',result)
+                    }
+                })
+        })
+    }//end of validate issue
+
+    let addingWatcher = () => {
+        return new Promise((resolve, reject) => {
+            let data =
+            {
+                watcherId: req.body.watcherId,
+                watcherName: req.body.watcherName
+            }
+
+            //pushing data onto watchers array
+            let option =
+            {
+                $push:
+                {
+                    watchers:
+                    {
+                        $each: [data]
+                    }
+                }
+            }
+
+            issueModel.updateOne({ 'issueId': req.params.issueId }, option, (err, result) => {
+                if (err) {
+                    logger.error(err, 'issuecontroller:addingWatcher', 10);
+                    apiResponse = response.generate(true, 'error while adding watcher', 500, null);
+                    reject(apiResponse);
+                }
+                else {
+                    logger.info('added as watcher');
+                    apiResponse = response.generate(false, 'added as watcher', 200, data);
+                    resolve(apiResponse)
+                }
+            })
+        })
+    }//end of addingwatcher promise
+
+    validateInput(req, res)
+        .then(validateIssue)
+        .then(addingWatcher)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+}
+
+let searchIssue = (req, res) => {
+    let validateInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.query.searchText) {
+                resolve(req)
+            }
+            else {
+                logger.error('search text is missing');
+                apiResponse = response.generate(true, 'search text is missing', 500, null);
+                reject(apiResponse)
+            }
+        })
+    }//end of validateInput
+
+    let findAllIssues = () => {
+        return new Promise((resolve, reject) => {
+            issueModel.find()
+                .select(' -__v -_id -comments -watchers -assignee')
+                .lean()
+                .exec((err, result) => {
+                    if (err) {
+                        console.log(err)
+                        logger.error('failed to find all issues', 'issue Controller: findAllIssues', 10)
+                        let apiResponse = response.generate(true, 'Failed To Find all issues', 500, null)
+                        res.send(apiResponse)
+                    } else if (checkLib.isEmpty(result)) {
+                        logger.info('No issues Found', 'issue Controller: findAllIssues')
+                        let apiResponse = response.generate(true, 'No issues Found', 404, null)
+                        res.send(apiResponse)
+                    } else {
+                        resolve(result)
+                    }
+                })
+        })
+    }//end of find all issues
+
+    let filterResult = (allIssues) => {
+        return new Promise((resolve, reject) => {
+            let result = [];
+            let searchText = req.query.searchText;
+
+            if (allIssues) {
+                allIssues.forEach((issue) => {
+                    let n = issue.title.search(new RegExp(searchText, 'i'));
+                    console.log(n);
+                    if (n >= 0) {
+                        result.push(issue);
+                    }
+                })
+            }
+
+            apiResponse = response.generate(false, 'search result', 200, result);
+            resolve(apiResponse);
+        })
+    }
+
+    validateInput(req, res)
+        .then(findAllIssues)
+        .then(filterResult)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+}
+
 module.exports = {
     createIssue: createIssue,
     getAllIssues: getAllIssues,
     getIssueById: getIssueById,
     getIssuesOfUser: getIssuesOfUser,
     reportedIssuesOfUser: reportedIssuesOfUser,
-    addComment: addComment
+    addComment: addComment,
+    editIssue: editIssue,
+    addWatcher: addWatcher,
+    searchIssue: searchIssue
 }

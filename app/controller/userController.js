@@ -6,7 +6,8 @@ const checkLib = require('../lib/checkLib');
 const shortid = require('shortid');
 const passwordLib = require('../lib/passwordLib');
 const timeLib = require('../lib/timeLib');
-const tokenLib = require('../lib/tokenLib')
+const tokenLib = require('../lib/tokenLib');
+const emailLib = require('../lib/emailLib')
 
 const UserModel = mongoose.model('userModel');
 const authModel = mongoose.model('authModel')
@@ -70,6 +71,17 @@ let signUp = (req, res) => {
                             } else {
                                 //converting mongoose object to plain javascript object
                                 let newUserObj = newUserDetail.toObject();
+                                //console.log(newUserObj)
+
+                                let emailOption =
+                                {
+                                    email: newUserObj.email,
+                                    subject: "Sign-Up info",
+                                    html: `Hi <i>${newUserObj.firstName}</i>,
+                                    <p>You have successfully signed up with issue-tracker</p>`
+                                }
+
+                                emailLib.sendEmailToUser(emailOption);
 
                                 resolve(newUserObj)
                             }
@@ -303,10 +315,119 @@ let getAllUsers = (req, res) => {
         })
 }// end get all users
 
+//function to resolve forgot password
+let forgotPassword = (req, res) => {
+
+    //validating email
+    let validateUserInput = () => {
+        return new Promise((resolve, reject) => {
+            if (req.params.email) {
+                if (!validateInput.Email(req.params.email)) {
+                    apiResponse = response.generate(true, 'email does not met the requirement', 400, null);
+                    logger.error('not valid email', 'userController:recoverForgotPassword:validateUserInput', 10)
+                    reject(apiResponse)
+                }
+                else {
+                    logger.info('user validated', 'userController:validateUserInput', 10);
+                    resolve(req);
+                }
+            }
+            else {
+                logger.error('email field missing', 'userController:recoverForgotPassword', 10);
+                apiResponse = response.generate(true, 'Email is missing', 400, null);
+                reject(apiResponse);
+            }
+        });
+    }//end of validate user input
+
+    let findUser = () => {
+        return new Promise((resolve, reject) => {
+
+            UserModel.findOne({ 'email': req.params.email })
+                .select('-__v -_id')
+                .lean()
+                .exec((err, result) => {
+                    if (err) {
+                        console.log(err)
+                        logger.error('failed to find user detail', 'User Controller: recoverPassword', 10)
+                        apiResponse = response.generate(true, 'Failed To Find User Details', 500, null)
+                        reject(apiResponse)
+                    } else if (checkLib.isEmpty(result)) {
+                        logger.info('No User Found with given email', 'User Controller:recoverPassword')
+                        apiResponse = response.generate(true, 'No User Found with given email', 404, null)
+                        reject(apiResponse)
+                    } else {
+                        resolve(result)
+
+                    }
+                })
+        })
+    }
+
+    let generateAndSaveNewPassword = (userDetail) => {
+
+        //generating new password
+        let newPassword = passwordLib.generateNewPassword();
+        console.log('new password', newPassword);
+
+        //updating userDetail with new hashed password
+        userDetail.password = passwordLib.hashPassword(newPassword)
+
+        return new Promise((resolve, reject) => {
+            UserModel.updateOne({ 'email': req.params.email }, userDetail).exec((err, result) => {
+                if (err) {
+                    console.log(err)
+                    logger.error('failed to reset password', 'User Controller:generateAndSavePassword', 10)
+                    apiResponse = response.generate(true, 'Failed To reset Password', 500, null)
+                    reject(apiResponse)
+                } else if (checkLib.isEmpty(result)) {
+                    logger.info('No email Found', 'User Controller: generateAndSaveNewPassword')
+                    apiResponse = response.generate(true, 'No User with email Found', 404, null)
+                    reject(apiResponse)
+                } else {
+                    //Creating object for sending email 
+                    let sendEmailObj = {
+                        email: req.params.email,
+                        subject: 'Reset Password for Issue-tracker ',
+                        html: `<h5> Hi ${userDetail.firstName}</h5>
+                                <pre>
+-----It seems you have forgot your password of Issue-tracker------
+No worries , You have been provided a new password in replace to your
+old password.
+    
+Your new password is -->${newPassword}<--
+    
+***** Keep visiting Issue-tracker****                                
+</pre>`
+                    }
+
+                    setTimeout(() => {
+                        emailLib.sendEmailToUser(sendEmailObj);
+                    }, 1500);
+                    apiResponse = response.generate(false, 'reset password successfull', 200, result)
+                    resolve(apiResponse)
+                }
+            });
+        })
+    }//end of generating and saving new password
+
+    validateUserInput(req, res)
+        .then(findUser)
+        .then(generateAndSaveNewPassword)
+        .then((resolve) => {
+            res.send(resolve)
+        })
+        .catch((error) => {
+            res.send(error)
+        })
+    //logic of function
+}//end of forgot password function
+
 module.exports =
     {
         signUp: signUp,
         signIn: signIn,
         signOut: signOut,
-        getAllUsers:getAllUsers
+        getAllUsers: getAllUsers,
+        forgotPassword: forgotPassword
     }

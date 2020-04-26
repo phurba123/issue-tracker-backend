@@ -84,6 +84,10 @@ function onError() {
 }
 /**End of http server events */
 
+// socket io connection handler 
+const socketLib = require('./app/lib/socketLib');
+const socketServer = socketLib.setServer(server)
+
 /**
  * database connection settings
  */
